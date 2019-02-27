@@ -21,16 +21,29 @@ import string # to process standard python strings
 ##f=open('allsongs.txt','r',errors = 'ignore')
 ##raw=f.read()
 ##raw=raw.lower()# converts to lowercase
-corpus_root = '/Users/ed/Sources/GH/tomwaits_ebooks/bin/download-lyrics'
+corpus_root = './bin/download-lyrics'
 wordlist = nltk.corpus.PlaintextCorpusReader(corpus_root, '.*txt')
 raw = wordlist.raw()
 
 #nltk.download('punkt') # first-time use only
 #nltk.download('wordnet') # first-time use only
+#nltk.download('tagsets') # tagsets, for getting help on upenn_tagset
+#nltk.download('averaged_perceptron_tagger') # part-of-speech ( POS ) tagging
+# FUN GAME, analyize a sentence.
+# sent_tokens is the sentence-ized input
+##  nltk.pos_tag(nltk.word_tokenize(sent_tokens[0]))
+## >>> cb.sent_tokens[0]
+## 'I plugged 16 shells from a thirty-ought-six\nand the Black Crow snuck through \na hole in the sky.'
+## >>> cb.nltk.pos_tag(cb.nltk.word_tokenize(cb.sent_tokens[0]))
+## [('I', 'PRP'), ('plugged', 'VBD'), ('16', 'CD'), ('shells', 'NNS'), ('from', 'IN'), ('a', 'DT'), ('thirty-ought-six', 'JJ'), ('and', 'CC'), ('the', 'DT'), ('Black', 'NNP'), ('Crow', 'NNP'), ('snuck', 'VBD'), ('through', 'IN'), ('a', 'DT'), ('hole', 'NN'), ('in', 'IN'), ('the', 'DT'), ('sky', 'NN'), ('.', '.')]
+## >>> 
+
 sent_detector = True 
 sent_tokens = nltk.sent_tokenize(raw)# converts to list of sentences 
 word_tokens = nltk.word_tokenize(raw)# converts to list of words
 text_tokens = nltk.Text(word_tokens)
+
+### Fun stuff
 
 for x in range(0,10):
     print(f"SENT_TOKENS[{x}] ARE")
