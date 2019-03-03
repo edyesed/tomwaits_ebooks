@@ -6,10 +6,14 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-nltk = "*"
+# we need nltk from at least  2e54803 
+#  per https://github.com/nltk/nltk/pull/2186
+#nltk = {editable = true,git = "https://github.com/ntlk/nltk.git"}
 numpy = "*"
 sklearn = "*"
 scipy = "*"
+neo4j = "*"
+nltk = {file = "git+https://github.com/nltk/nltk.git"}
 
 [requires]
 python_version = "3.7"
