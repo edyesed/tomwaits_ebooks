@@ -71,33 +71,34 @@ if __name__ == "__main__":
                 print("""sent""")
                 print(sent)
                 sent_create = f"""MERGE (s:Lyric {{ text: $sent }}) return s"""
-                print("""sent_create""")
-                print(sent_create)
+                print("""sent_create sent:{sent}""")
                 try:
                     session.run(sent_create, sent=sent)
                 except Exception as e:
+                    print("EXCEPTION RAISED")
                     print(e)
-                sent_rel = f"""MATCH (s:Lyric),(n:Song) WHERE s.text=$sent AND n.title=$fid MERGE (n)-[r:PART_OF]-(s) RETURN type(r)"""
-                print("""sent_rel""")
-                print(sent_rel)
+                sent_rel = f"""MATCH (s:Lyric),(n:Song) WHERE s.text=$sent AND n.title=$fid MERGE (n)-[r:SONG_LYRIC]-(s) RETURN type(r)"""
+                print("""sent_rel sent:{sent} fid:{fid}""")
                 try:
                     session.run(sent_rel, sent=sent, fid=fid)
                 except Exception as e:
+                    print("EXCEPTION RAISED")
                     print(e)
                 for word in sent_parts:
                     word_create = f"""MERGE (w:Word {{ text: $word, tag: $tag}}) """
-                    print("""word_create""")
-                    print(word_create)
+                    print("""word_create text:{word} tag:{tag}""")
                     try:
-                        session.run(word_create, word=word[0], tag=word[1])
+                        # Always drop the individual words in lower case
+                        session.run(word_create, word=word[0].lower(), tag=word[1])
                     except Exception as e:
+                        print("EXCEPTION RAISED")
                         print(e)
-                    word_rel = f"""MATCH (s:Lyric),(w:Word) WHERE s.text=$sent AND w.text=$text AND w.tag=$tag MERGE (w)-[r:PART_OF]-(s) RETURN type(r)"""
-                    print("""word_rel""")
-                    print(word_rel)
+                    word_rel = f"""MATCH (s:Lyric),(w:Word) WHERE s.text=$sent AND w.text=$text AND w.tag=$tag MERGE (w)-[r:LYRIC_WORD]-(s) RETURN type(r)"""
+                    print("""word_rel sent:{sent} word:{word[0]} tag:{word[1]}""")
                     try:
                         session.run(word_rel, sent=sent, text=word[0], tag=word[1])
                     except Exception as e:
+                        print("EXCEPTION RAISED")
                         print(e)
                 #print(nltk.sent_tokenize(wordlist.raw(fid))[idx])
             print(" stop spot ")
