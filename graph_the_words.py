@@ -14,6 +14,7 @@ import numpy as np
 import random
 import time
 import string # to process standard python strings
+import pickle
 
 from neo4j import GraphDatabase
 
@@ -59,10 +60,20 @@ if __name__ == "__main__":
         for fid in wordlist.fileids():
             print(fid)
             song_create = f"""MERGE (s:Song {{ title: "{fid}" }}) return s"""
-            session.run(song_create)
+            try:
+                session.run(song_create)
+            except Exception as e:
+                print(f"EXCEPTION RAISED creating song {fid}")
+                print(e)
             # sent is short for sentence
             # pos_tag_sents is seemingly a better way to pos_tag lists of sentences
             sent_toks = nltk.pos_tag_sents(nltk.word_tokenize(sent) for sent in nltk.sent_tokenize(wordlist.raw(fid)))
+            try:
+                with open(f'pickled_lyrics/{fid}.pkl', "wb") as out_f:
+                    pickle.dump(sent_toks, out_f)
+            except Exception as e:
+                print("Exception raised while pickling")
+                print(e)
             #for idx, sent in nltk.sent_tokenize(wordlist.raw(fid)):
             #    print(sent)
             #    print(sent_toks[idx])
@@ -70,35 +81,36 @@ if __name__ == "__main__":
                 sent = nltk.sent_tokenize(wordlist.raw(fid))[idx]
                 print("""sent""")
                 print(sent)
-                sent_create = f"""MERGE (s:Lyric {{ text: $sent }}) return s"""
-                print("""sent_create sent:{sent}""")
+                sent_create = f"""MERGE (s:Lyric {{ text: $text }}) return s"""
+                print(f"""sent_create text:{sent}""")
                 try:
-                    session.run(sent_create, sent=sent)
+                    session.run(sent_create, text=sent)
                 except Exception as e:
-                    print("EXCEPTION RAISED")
+                    print("EXCEPTION RAISED create sent_create")
                     print(e)
                 sent_rel = f"""MATCH (s:Lyric),(n:Song) WHERE s.text=$sent AND n.title=$fid MERGE (n)-[r:SONG_LYRIC]-(s) RETURN type(r)"""
-                print("""sent_rel sent:{sent} fid:{fid}""")
+                print(f"""sent_rel sent:{sent} fid:{fid}""")
                 try:
                     session.run(sent_rel, sent=sent, fid=fid)
                 except Exception as e:
-                    print("EXCEPTION RAISED")
+                    print("EXCEPTION RAISED sent_rel")
                     print(e)
-                for word in sent_parts:
+                for word,tag in sent_parts:
                     word_create = f"""MERGE (w:Word {{ text: $word, tag: $tag}}) """
-                    print("""word_create text:{word} tag:{tag}""")
+                    print(f"""word_create text:{word} tag:{tag}""")
                     try:
                         # Always drop the individual words in lower case
-                        session.run(word_create, word=word[0].lower(), tag=word[1])
+                        #session.run(word_create, word=word[0].lower(), tag=word[1])
+                        session.run(word_create, word=word.lower(), tag=tag)
                     except Exception as e:
-                        print("EXCEPTION RAISED")
+                        print("EXCEPTION RAISED word_create")
                         print(e)
-                    word_rel = f"""MATCH (s:Lyric),(w:Word) WHERE s.text=$sent AND w.text=$text AND w.tag=$tag MERGE (w)-[r:LYRIC_WORD]-(s) RETURN type(r)"""
-                    print("""word_rel sent:{sent} word:{word[0]} tag:{word[1]}""")
+                    word_rel = f"""MATCH (s:Lyric),(w:Word) WHERE s.text=$sent AND w.text=$word AND w.tag=$tag MERGE (w)-[r:LYRIC_WORD]-(s) RETURN type(r)"""
+                    print(f"""word_rel sent:{sent} word:{word} tag:{tag}""")
                     try:
-                        session.run(word_rel, sent=sent, text=word[0], tag=word[1])
+                        session.run(word_rel, sent=sent, word=word.lower(), tag=tag)
                     except Exception as e:
-                        print("EXCEPTION RAISED")
+                        print("EXCEPTION RAISED word_rel")
                         print(e)
                 #print(nltk.sent_tokenize(wordlist.raw(fid))[idx])
             print(" stop spot ")
@@ -115,3 +127,27 @@ if __name__ == "__main__":
             #text_tokens = nltk.Text(word_tokens)
             #for token in sent_tokens:
             #    print(nltk.pos_tag(nltk.word_tokenize(token)))
+
+
+### ED NOTES
+# see https://www.nltk.org/book/ch05.html
+#>>> f = open('pickled_lyrics/big_joe_and_phantom_309.txt.pkl', 'rb')
+#>>> obj = pickle.load(f)
+#>>> f.close()
+#>>> obj
+# pos is word with counts
+# i.e. 
+# >>> for k in pos.keys():
+# ...    print(k, len(pos[k]))
+# ... 
+# See 1
+# , 54
+# I 32
+# >>> pos = nltk.Index(wor for sent in obj for wor in sent)
+# pos2 is words by tag_pos
+# i.e. 
+# 
+# >>> pos2['NN']
+# ['coast', 'buck', 'everybody', 'luck', 'way', 'hometown', 'couple', 'week', 'luck', 'way', 'night', 'rain', 'man', 'chill', 'time', 'time', 'semi', 'hill', 'air', 'cab', 'wheel', 'wheel', 'man', 'hand', 'grin', 'name', 'rig', 'rig',
+#>>> pos2 = nltk.Index((wor[1],wor[0]) for sent in obj for wor in sent)
+# MOST COMMON WORD

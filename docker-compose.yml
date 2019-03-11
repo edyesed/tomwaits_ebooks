@@ -12,6 +12,8 @@ services:
     entrypoint: 
       - python3
       - /app/graph_the_words.py
+    volumes:
+      - ./pickled_lyrics:/app/pickled_lyrics
   neo:
     image: bitnami/neo4j:3.5.3 
     container_name: neo
