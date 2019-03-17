@@ -83,4 +83,4 @@ arts of Speech for POS tagging : https://medium.com/@gianpaul.r/tokenization-and
 | WDT | wh-determiner which |
 | WP | wh-pronoun who, what |
 | WP$ | possessive wh-pronoun whose |
-    | WRB | wh-abverb where, when |
+| WRB | wh-abverb where, when |
