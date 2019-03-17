@@ -39,3 +39,8 @@ This finds the words and counts them by their frequency in all lyrics
 ```
 MATCH (n:Word)-[r:LYRIC_WORD]-() RETURN n.tag, n.text, count(r) ORDER BY count(r) DESC
 ```
+
+##  Edu stuff
+1. https://www.lexalytics.com/lexablog/text-analytics-functions-explained
+2. Chunking in the NLTK book https://www.nltk.org/book/ch07.html
+
