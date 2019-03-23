@@ -42,6 +42,8 @@ def parse_sentence(sentence=None, grammar=None):
 if __name__ == "__main__":
     files = list_files()
     cp = nltk.RegexpParser(GRAMMAR)
+    #stemmer = nltk.stem.SnowballStemmer('english')
+    stemmer = nltk.stem.PorterStemmer()
     for file in files:
         print(file)
         print(file)
@@ -59,8 +61,8 @@ if __name__ == "__main__":
                     print_s = True
                 if chunk.label()[0:2] == 'VP':
                     for bit in chunk:
-                        
-                    print("WHAT WHAT")
+                        print("STEM STEM")
+                        print(stemmer.stem(bit[0]))
             if print_s:
                 print(sentence)
             #print(help(sentence))
