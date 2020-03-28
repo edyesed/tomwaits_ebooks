@@ -22,7 +22,8 @@ uri = "bolt://neo:7687"
 for i in range(1,60):
     while True:
         try:
-            driver = GraphDatabase.driver(uri, auth=("neo4j", "bitnami"), connection_timeout=120)
+            # driver = GraphDatabase.driver(uri, auth=("neo4j", "bitnami"), connection_timeout=120)
+            driver = GraphDatabase.driver(uri, connection_timeout=120)
         except Exception as e:
             print(f"Error number {i}. {e}.")
             print(f"Error number {i} connecting to neo, sleeping for 2 seconds")
@@ -67,7 +68,7 @@ if __name__ == "__main__":
                 print(e)
             # sent is short for sentence
             # pos_tag_sents is seemingly a better way to pos_tag lists of sentences
-            sent_toks = nltk.pos_tag_sents(nltk.word_tokenize(sent) for sent in nltk.sent_tokenize(wordlist.raw(fid)))
+            sent_toks = nltk.pos_tag_sents(nltk.word_tokenize(sent) for sent in nltk.sent_tokenize(wordlist.raw(fid).split('\n')))
             try:
                 with open(f'pickled_lyrics/{fid}.pkl', "wb") as out_f:
                     pickle.dump(sent_toks, out_f)

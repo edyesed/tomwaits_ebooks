@@ -15,10 +15,14 @@ services:
     volumes:
       - ./pickled_lyrics:/app/pickled_lyrics
   neo:
-    image: bitnami/neo4j:3.5.3 
+    #image: bitnami/neo4j:3.5.3 
+    image: neo4j:3.5.3 
     container_name: neo
+    environment: 
+      - NEO4J_AUTH=none
     volumes:
-      - ./neo4jdata:/bitnami
+      #- ./neo4jdata:/bitnami
+      - ./neo4jdata:/var/lib/neo4j/data
     ports:
       - '7474:7474'
       - '7473:7473'
