@@ -15,44 +15,24 @@ import random
 import time
 import string # to process standard python strings
 import pickle
+import os
 
 from neo4j import GraphDatabase
 
-uri = "bolt://neo:7687"
+uri = os.environ.get('NEO_URL', 'bolt://neo:7687')
+
 for i in range(1,60):
     while True:
         try:
             # driver = GraphDatabase.driver(uri, auth=("neo4j", "bitnami"), connection_timeout=120)
-            driver = GraphDatabase.driver(uri, connection_timeout=120)
+            driver = GraphDatabase.driver(uri, connection_timeout=10)
         except Exception as e:
             print(f"Error number {i}. {e}.")
             print(f"Error number {i} connecting to neo, sleeping for 2 seconds")
+            print(f"NEO_URL is {uri}")
             time.sleep(2)
         break
 
-class HelloWorldExample(object):
-    def __init__(self, uri, user, password):
-        self._driver = GraphDatabase.driver(uri, auth=(user, password))
-
-    def close(self):
-        self._driver.close()
-
-    def print_greeting(self, message):
-        with self._driver.session() as session:
-            greeting = session.write_transaction(self._create_and_return_greeting, message)
-            print(greeting)
-
-    @staticmethod
-    def _create_and_return_greeting(tx, message):
-        result = tx.run("CREATE (a:Greeting) "
-                        "SET a.message = $message "
-                        "RETURN a.message + ', from node ' + id(a)", message=message)
-        return result.single()[0]
-
-
-##f=open('allsongs.txt','r',errors = 'ignore')
-##raw=f.read()
-##raw=raw.lower()# converts to lowercase
 corpus_root = './bin/download-lyrics'
 wordlist = nltk.corpus.PlaintextCorpusReader(corpus_root, '.*txt')
 
@@ -68,67 +48,37 @@ if __name__ == "__main__":
                 print(e)
             # sent is short for sentence
             # pos_tag_sents is seemingly a better way to pos_tag lists of sentences
-            sent_toks = nltk.pos_tag_sents(nltk.word_tokenize(sent) for sent in nltk.sent_tokenize(wordlist.raw(fid).split('\n')))
+            sentence_list = wordlist.raw(fid).split('\n\r\n')
+            sent_toks = []
+            for sentence in sentence_list:
+                sent_toks.append(nltk.pos_tag_sents([nltk.word_tokenize(sentence)]))
+            # Save that hard work into a pickle
             try:
                 with open(f'pickled_lyrics/{fid}.pkl', "wb") as out_f:
                     pickle.dump(sent_toks, out_f)
             except Exception as e:
                 print("Exception raised while pickling")
                 print(e)
-            #for idx, sent in nltk.sent_tokenize(wordlist.raw(fid)):
-            #    print(sent)
-            #    print(sent_toks[idx])
-            for idx, sent_parts in enumerate(sent_toks):
-                sent = nltk.sent_tokenize(wordlist.raw(fid))[idx]
-                print("""sent""")
-                print(sent)
-                sent_create = f"""MERGE (s:Lyric {{ text: $text }}) return s"""
-                print(f"""sent_create text:{sent}""")
+            # Try and stash the indivicual words.
+            #  this seems... hmm.. idk
+            for idx, sent in enumerate(sent_toks):
+                lyric = ""
+                for subsent in sent:
+                    lyric += ' '.join([word for word,POS in subsent])
+                sent_create = f"""MERGE (l{idx}:Lyric {{ text: $text }}) return l{idx}"""
+                print(f"""sent_create : {sent_create}""")
+                print(f"""sent_create text:{lyric}""")
                 try:
-                    session.run(sent_create, text=sent)
+                    session.run(sent_create, text=lyric)
                 except Exception as e:
                     print("EXCEPTION RAISED create sent_create")
                     print(e)
                 sent_rel = f"""MATCH (s:Lyric),(n:Song) WHERE s.text=$sent AND n.title=$fid MERGE (n)-[r:SONG_LYRIC]-(s) RETURN type(r)"""
-                print(f"""sent_rel sent:{sent} fid:{fid}""")
                 try:
-                    session.run(sent_rel, sent=sent, fid=fid)
+                    session.run(sent_rel, sent=lyric, fid=fid)
                 except Exception as e:
                     print("EXCEPTION RAISED sent_rel")
                     print(e)
-                for word,tag in sent_parts:
-                    word_create = f"""MERGE (w:Word {{ text: $word, tag: $tag}}) """
-                    print(f"""word_create text:{word} tag:{tag}""")
-                    try:
-                        # Always drop the individual words in lower case
-                        #session.run(word_create, word=word[0].lower(), tag=word[1])
-                        session.run(word_create, word=word.lower(), tag=tag)
-                    except Exception as e:
-                        print("EXCEPTION RAISED word_create")
-                        print(e)
-                    word_rel = f"""MATCH (s:Lyric),(w:Word) WHERE s.text=$sent AND w.text=$word AND w.tag=$tag MERGE (w)-[r:LYRIC_WORD]-(s) RETURN type(r)"""
-                    print(f"""word_rel sent:{sent} word:{word} tag:{tag}""")
-                    try:
-                        session.run(word_rel, sent=sent, word=word.lower(), tag=tag)
-                    except Exception as e:
-                        print("EXCEPTION RAISED word_rel")
-                        print(e)
-                #print(nltk.sent_tokenize(wordlist.raw(fid))[idx])
-            print(" stop spot ")
-            print(" stop spot ")
-            print(" stop spot ")
-            #for sent in nltk.sent_tokenize(wordlist.raw(fid)):
-            #    print(nltk.pos_ta
-            #    print(sent)
-            #raw = wordlist.words(fid).raw()
-            #word_tokens = wordlist.words(fid)
-            #sent_detector = True 
-            #sent_tokens = nltk.sent_tokenize(raw)# converts to list of sentences 
-            #word_tokens = nltk.word_tokenize(raw)# converts to list of words
-            #text_tokens = nltk.Text(word_tokens)
-            #for token in sent_tokens:
-            #    print(nltk.pos_tag(nltk.word_tokenize(token)))
-
 
 ### ED NOTES
 # see https://www.nltk.org/book/ch05.html

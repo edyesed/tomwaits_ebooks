@@ -2,3 +2,5 @@
 allsongs.txt
 #
 bin/download-lyrics/*.txt
+
+.vscode

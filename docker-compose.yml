@@ -7,8 +7,10 @@ services:
     stdin_open: true
   tomwaits_graph_input:
     image: tomwaits_chat:local
+    tty: true
+    stdin_open: true
     environment:
-      - NEO_URL="bolt://neo:7687"
+      - NEO_URL=bolt://neo:7687
     entrypoint: 
       - python3
       - /app/graph_the_words.py
