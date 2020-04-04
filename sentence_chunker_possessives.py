@@ -27,16 +27,12 @@ INPUT_DIR='./pickled_lyrics'
 #"""
 
 GRAMMAR = r"""
-  NP: {<CD|DT|PP\$>?<JJ>*<NN.*>+} # Chunk sequences of DT, JJ, NN
+  NP: {<CD|DT|PP\$>?<JJ[RS]*>*<NN.*>+} # Chunk sequences of DT, JJ, NN
   PP: {<IN><NP>}                  # Chunk prepositions followed by NP
   VPastPart: {<VBN><IN>}          # Chunk verbs and their arguments
-  VP: {<VB[^R].*>}                # Chunk verbs and their arguments
+  VP: {<RB>?<VB[^RZ].*>}                # Chunk verbs and their arguments
   NOUNANDVERB: {<NP><VP>}         # Chunk NP to VP
-  VERBANDPREP: {<VP>+<PP>+}
-  """
-
-GEN_GRAMMAR = r"""
-  
+  VERBANDPREP: {<VP><PP>}
   """
 
 def list_files(dir=""):
@@ -69,86 +65,43 @@ if __name__ == "__main__":
     with driver.session() as session:
         for file in files:
             print(file)
-            print(file)
             orig_filename = file.strip('.pkl')
-            #song_create = f"""MERGE (s:Song {{ title: "{orig_filename}" }}) return s"""
-            #try:
-            #    session.run(song_create)
-            #except Exception as e:
-            #    print(f"EXCEPTION RAISED creating song {orig_filename}")
-            #    print(e)
+            ## Songs already exist in neo courtesy of  graph_the_words.py
 
             pos_data = read_file(fname=file, dir=INPUT_DIR)
-            #print(pos_data)
             for lyric in pos_data:
                 #tokenized_sentence = nltk.tokenize.sent_tokenize(sentence)
-                for sentence in lyric:
+                for lyric_idx, sentence in enumerate(lyric):
                     lyric_flat = ' '.join([w[0] for w in sentence])
 
-                    print_s = False
                     chunks = cp.parse(sentence)
                     # care_about = ['NP', 'VP', 'PP', 'VPastPart', 'VERBANDPREP' ]
                     care_about = ['NP', 'VERBANDPREP', 'NOUNANDVERB']
-                    for chunk in chunks.subtrees(filter=lambda t: t.label() in care_about ):
-                    #for chunk in chunks.subtrees():
-                        print("")
-                        print("CHUNK")
-                        print(chunk.label())
-                        print(chunk)
-                        phrase = ' '.join([x[0] for x in chunk.flatten()])
-                        print(phrase)
-                        #cypher = f"""
-                        #            MERGE (l:Lyric {{ title: "{orig_filename}" }}) 
-                        #        """
+                    for chunk_idx, chunk in enumerate(chunks.subtrees(filter=lambda t: t.label() in care_about )):
+                        # We ensure that we send up the lyric once so we can relationship to it
+                        # and the phrase 
                         cypher = f"""
                                     MERGE (l:Lyric {{ text: "{lyric_flat}" }}) 
                                 """
-                        if chunk.label() == 'NP':
+
+                        phrase = ' '.join([x[0] for x in chunk.flatten()]).lower()
+                        cypher += f"""
+                                 MERGE (pl{chunk_idx}:Phrase {{ text: "{phrase}" }})
+                                 MERGE (pl{chunk_idx})<-[rl{chunk_idx}:{chunk.label()}]-(l)
+                             """
+                        for counter, subt in enumerate(chunk.subtrees()):
+                            phrase = ' '.join([x[0] for x in subt.flatten()]).lower()
                             cypher += f"""
-                                MERGE (p:Phrase {{ text: "{phrase}" }})
-                                MERGE (p)<-[r:{chunk.label()}]-(l)
+                                MERGE (p{counter}:Phrase {{ text: "{phrase}" }})
+                                MERGE (p{counter})<-[r{counter}:{chunk.label()}]-(l)
                             """
-                        else:
-                            counter = 0
-                            for subt in chunk.subtrees():
-                                phrase = ' '.join([x[0] for x in subt.flatten()])
-                                cypher += f"""
-                                    MERGE (p{counter}:Phrase {{ text: "{phrase}" }})
-                                """
-                                if counter == 0:
-                                    cypher += f"""
-                                    MERGE (p{counter})<-[r:{subt.label()}]-(s)
-                                    """
-                                if counter >0:
-                                    cypher += f"""
-                                    MERGE (p{counter})<-[r{counter}:{subt.label()}]-(p{counter-1})
-                                    """
-                                counter += 1
+                        try:
+                            #print(cypher)
+                            session.run(cypher)
+                        except Exception as e:
+                            print(f"EXCEPTION RAISED phrase: {phrase}")
+                            print(cypher)
+                            print(e)
 
-    
-                    try:
-                        session.run(cypher)
-                    except Exception as e:
-                        print(f"EXCEPTION RAISED phrase: {phrase}")
-                        print(cypher)
-                        print(e)
-
-                    #try:
-                    #    session.run(phrase_rel, song_title=orig_filename, phrase=phrase)
-                    #except Exception as e:
-                    #    print(f"EXCEPTION RAISED phrase_relationship: {phrase}")
-                    #    print(e)
-
-                    #if chunk.label() == 'NP' or chunk.label() == 'VP' \
-                    #  or chunk.label() == 'PP' \
-                    #  or chunk.label() == 'VPastPart':
-                    #    print(f"""{chunk}""")
-                    #    print_s = True
-                    #if chunk.label()[0:2] == 'VP':
-                    #    for bit in chunk:
-                    #        print("STEM STEM")
-                    #        print(stemmer.stem(bit[0]))
-                if print_s:
-                    print(sentence)
-                #print(help(sentence))
-        print("")
+        # close out the neo session
+        session.close()
