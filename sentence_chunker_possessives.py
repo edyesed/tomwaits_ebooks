@@ -93,9 +93,17 @@ if __name__ == "__main__":
 
                         phrase = ' '.join([x[0] for x in chunk.flatten()]).lower()
                         cypher += f"""
-                                 MERGE (pl{chunk_idx}:Phrase {{ text: "{phrase}" }})
+                                 MERGE (pl{chunk_idx}:Phrase {{ text: "{phrase}", label: "{chunk.label().lower()}" }})
                                  MERGE (pl{chunk_idx})<-[rl{chunk_idx}:{chunk.label()}]-(l)
                              """
+                        for word_idx, word in enumerate(chunk.flatten()):
+                            if word[1] in ['NN', 'VBP']:
+                                rootword = stemmer.stem(word[0])
+                                cypher += f"""
+                                    MERGE (rw{word_idx}:RootWord {{ text: "{rootword.lower()}" }})
+                                    MERGE (rw{word_idx})<-[rrw{word_idx}:RootWord]-(pl{chunk_idx})
+                                """
+
                         try:
                             if DEBUG:
                                 print(cypher)

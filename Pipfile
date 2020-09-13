@@ -17,6 +17,8 @@ neo4j = "*"
 nltk = {file = "git+https://github.com/nltk/nltk.git"}
 beautifulsoup4 = "*"
 requests = "*"
+# Haven't actually started using stanza yet
+#stanza = "*"
 
 [requires]
 python_version = "3.7"

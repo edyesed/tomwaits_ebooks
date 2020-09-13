@@ -7,6 +7,8 @@ RUN python3 -m nltk.downloader punkt
 RUN python3 -m nltk.downloader wordnet
 RUN python3 -m nltk.downloader tagsets
 RUN python3 -m nltk.downloader averaged_perceptron_tagger
+# Not using stanza yet
+# RUN python3 -c "import stanza; stanza.download('en');"
 
 COPY *.py /app/
 COPY bin/download-lyrics/*txt /app/bin/download-lyrics/
