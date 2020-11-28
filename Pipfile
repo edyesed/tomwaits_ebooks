@@ -1,24 +1,19 @@
 [[source]]
-name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
+name = "pypi"
+
+[packages]
+sklearn = "*"
+numpy = "*"
+neo4j = "*"
+requests = "*"
+beautifulsoup4 = "*"
+nltk = "*"
+scipy = "*"
 
 [dev-packages]
 pylint = "*"
 
-[packages]
-# we need nltk from at least  2e54803 
-#  per https://github.com/nltk/nltk/pull/2186
-#nltk = {editable = true,git = "https://github.com/ntlk/nltk.git"}
-numpy = "*"
-sklearn = "*"
-scipy = "*"
-neo4j = "*"
-nltk = {file = "git+https://github.com/nltk/nltk.git"}
-beautifulsoup4 = "*"
-requests = "*"
-# Haven't actually started using stanza yet
-#stanza = "*"
-
 [requires]
-python_version = "3.7"
+python_version = "3.8"
