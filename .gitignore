@@ -1,0 +1,8 @@
+#
+allsongs.txt
+#
+bin/download-lyrics/*.txt
+
+
+__pycache__
+.vscode

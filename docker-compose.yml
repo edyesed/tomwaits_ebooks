@@ -1,0 +1,33 @@
+version: "3"
+services:
+  tomwaits_chat:
+    build: .
+    image: tomwaits_chat:local
+    tty: true
+    stdin_open: true
+  tomwaits_graph_input:
+    image: tomwaits_chat:local
+    tty: true
+    stdin_open: true
+    environment:
+      - NEO_URL=bolt://neo:7687
+    entrypoint: 
+      - python3
+      - /app/graph_the_words.py
+    volumes:
+      - ./pickled_lyrics:/app/pickled_lyrics
+  neo:
+    #image: bitnami/neo4j:3.5.3 
+    image: neo4j:3.5.3 
+    container_name: neo
+    environment: 
+      - NEO4J_AUTH=none
+    volumes:
+      #- ./neo4jdata:/bitnami
+      - ./neo4jdata:/var/lib/neo4j/data
+    ports:
+      - '7474:7474'
+      - '7473:7473'
+      - '7687:7687'
+    expose:
+      - '7687'
