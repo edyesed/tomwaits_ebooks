@@ -63,24 +63,24 @@ if __name__ == "__main__":
                 print(e)
             # Try and stash the indivicual words.
             #  this seems... hmm.. idk
-            for idx, sent in enumerate(sent_toks):
-                lyric = ""
-                for subsent in sent:
-                    lyric += ' '.join([word for word,POS in subsent])
-                sent_create = f"""MERGE (l{idx}:Lyric {{ text: $text }}) return l{idx}"""
-                print(f"""sent_create : {sent_create}""")
-                print(f"""sent_create text:{lyric}""")
-                try:
-                    session.run(sent_create, text=lyric)
-                except Exception as e:
-                    print("EXCEPTION RAISED create sent_create")
-                    print(e)
-                sent_rel = f"""MATCH (s:Lyric),(n:Song) WHERE s.text=$sent AND n.title=$fid MERGE (n)-[r:SONG_LYRIC]-(s) RETURN type(r)"""
-                try:
-                    session.run(sent_rel, sent=lyric, fid=fid)
-                except Exception as e:
-                    print("EXCEPTION RAISED sent_rel")
-                    print(e)
+            ##for idx, sent in enumerate(sent_toks):
+            ##    lyric = ""
+            ##    for subsent in sent:
+            ##        lyric += ' '.join([word for word,POS in subsent])
+            ##    sent_create = f"""MERGE (l{idx}:Lyric {{ text: $text }}) return l{idx}"""
+            ##    print(f"""sent_create : {sent_create}""")
+            ##    print(f"""sent_create text:{lyric}""")
+            ##    try:
+            ##        session.run(sent_create, text=lyric)
+            ##    except Exception as e:
+            ##        print("EXCEPTION RAISED create sent_create")
+            ##        print(e)
+            ##    sent_rel = f"""MATCH (s:Lyric),(n:Song) WHERE s.text=$sent AND n.title=$fid MERGE (n)-[r:SONG_LYRIC]-(s) RETURN type(r)"""
+            ##    try:
+            ##        session.run(sent_rel, sent=lyric, fid=fid)
+            ##    except Exception as e:
+            ##        print("EXCEPTION RAISED sent_rel")
+            ##        print(e)
 
 ### ED NOTES
 # see https://www.nltk.org/book/ch05.html

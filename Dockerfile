@@ -13,6 +13,7 @@ RUN pipenv run python3 -m nltk.downloader punkt
 RUN pipenv run python3 -m nltk.downloader wordnet
 RUN pipenv run python3 -m nltk.downloader tagsets
 RUN pipenv run python3 -m nltk.downloader averaged_perceptron_tagger
+RUN pipenv run python3 -m nltk.downloader book_grammars
 # Not using stanza yet
 # RUN pipenv exec python3 -c "import stanza; stanza.download('en');"
 
